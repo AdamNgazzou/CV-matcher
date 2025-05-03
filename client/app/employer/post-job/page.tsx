@@ -13,6 +13,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useJobStore } from "@/lib/store"
 import { Progress } from "@/components/ui/progress"
+import { postJob } from "@/services/post_job";
 
 export default function PostJobPage() {
   const router = useRouter()
@@ -55,39 +56,48 @@ export default function PostJobPage() {
   }
 
   const clearFileSelection = () => {
-    setFileName("")
-    setFileSize("")
-    setUploadProgress(0)
+    console.log("Clearing file selection"); // Debugging
+    setFileName("");
+    setFileSize("");
+    setUploadProgress(0);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""
+      fileInputRef.current.value = "";
     }
-  }
+  };
 
-  const handlePostJob = () => {
-    if (jobTitle && fileName) {
-      setIsSubmitting(true)
-
-      // Simulate API call
-      setTimeout(() => {
-        const newJob = {
-          id: Date.now().toString(),
-          title: jobTitle,
-          fileName: fileName,
-          fileSize: fileSize,
-        }
-
-        addJob(newJob)
-        setIsSubmitting(false)
-        setIsSuccess(true)
-
-        // Redirect after showing success message
+  const handlePostJob = async () => {
+    if (!fileInputRef.current) {
+      console.error("File input ref is not attached.");
+      return;
+    }
+  
+    console.log("File Input Ref:", fileInputRef.current);
+    console.log("Selected File:", fileInputRef.current?.files?.[0]);
+  
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
+      alert("Please select a file before posting the job.");
+      return;
+    }
+  
+    if (jobTitle && file) {
+      setIsSubmitting(true);
+      try {
+        const response = await postJob(jobTitle, file);
+        console.log("Job posted successfully:", response);
+        setIsSubmitting(false);
+        setIsSuccess(true);
         setTimeout(() => {
-          router.push("/employer")
-        }, 1500)
-      }, 800)
+          router.push("/employer");
+        }, 1500);
+      } catch (error) {
+        console.error("Error posting job:", error);
+        setIsSubmitting(false);
+      }
+    } else {
+      alert("Please fill out all fields and upload a file.");
     }
-  }
-
+  };
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pb-12">
       <div className="container mx-auto px-4 py-8">
@@ -157,13 +167,13 @@ export default function PostJobPage() {
                       {!fileName ? (
                         <div className="relative">
                           <Input
-                            ref={fileInputRef}
+                            ref={fileInputRef} // Ensure this is correctly passed
                             id="job-description-file"
                             type="file"
                             accept=".pdf,.doc,.docx,.txt"
                             onChange={handleFileChange}
                             className="hidden"
-                          />
+                          />                       
                           <div
                             onClick={() => fileInputRef.current?.click()}
                             className="flex h-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center transition-colors hover:border-teal-300 hover:bg-teal-50"

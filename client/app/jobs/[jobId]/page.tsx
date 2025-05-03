@@ -20,7 +20,7 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import { useJobStore } from "@/lib/store"
 import { Badge } from "@/components/ui/badge"
-
+import { fetchJobDetails } from "@/services/fetch-job-details";
 export default function JobDetailsPage() {
   const params = useParams()
   const router = useRouter()
@@ -36,6 +36,23 @@ export default function JobDetailsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
+    const [jobDetails, setJobDetails] = useState(null)
+
+  useEffect(() => {
+    const loadJobDetails = async () => {
+      try {
+        const data = await fetchJobDetails(jobId)
+        setJobDetails(data)
+        console.log("Job Details:", data)
+      } catch (error) {
+        console.error("Error fetching job details:", error)
+      }
+    }
+
+    loadJobDetails()
+  }, [jobId])
+  console.log(jobDetails)
+  
   useEffect(() => {
     // Open dialog if apply=true is in the URL
     if (searchParams.get("apply") === "true") {

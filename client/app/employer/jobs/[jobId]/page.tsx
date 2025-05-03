@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState,useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -28,6 +28,7 @@ import { useJobStore } from "@/lib/store"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { fetchScores } from "@/services/fetch_scores"
 
 export default function JobCandidatesPage() {
   const params = useParams()
@@ -41,7 +42,23 @@ export default function JobCandidatesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [sortBy, setSortBy] = useState("rating")
+  const [scores, setScores] = useState(null)
 
+
+  useEffect(() => {
+    const loadScores = async () => {
+      try {
+        const data = await fetchScores(2) // Test with jobId = 6
+        setScores(data)
+        console.log("Scores:", data)
+      } catch (error) {
+        console.error("Error fetching scores:", error)
+      }
+    }
+
+    loadScores()
+  }, [])
+  console.log("Scores:", scores)
   // Filter and sort applicants
   const filteredApplicants = applicants
     .filter((applicant) => {

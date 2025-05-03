@@ -21,6 +21,7 @@ import Link from "next/link"
 import { useJobStore } from "@/lib/store"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { fetchJobs } from "@/services/fetch_jobs"
 
 export default function CandidatePage() {
   const { jobs } = useJobStore()
@@ -35,6 +36,29 @@ export default function CandidatePage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [locationFilter, setLocationFilter] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("")
+
+  const [jobs2, setJobs2] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [filteredJobs2, setFilteredJobs2] = useState([])
+
+
+  useEffect(() => {
+    const loadJobs = async () => {
+      try {
+        const jobData = await fetchJobs();
+        setJobs2(jobData);
+        setFilteredJobs2(jobData);
+      } catch (err : any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadJobs();
+  }, []);
+  console.log("jobs2", jobs2)
 
   // Filter jobs based on search and filters
   useEffect(() => {
@@ -419,3 +443,5 @@ export default function CandidatePage() {
     </div>
   )
 }
+
+
