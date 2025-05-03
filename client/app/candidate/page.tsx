@@ -34,8 +34,8 @@ export default function CandidatePage() {
   const [isSuccess, setIsSuccess] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [locationFilter, setLocationFilter] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState("")
+  const [skillFilter, setSkillFilter] = useState("")
+  const [toolsFilter, setToolsFilter] = useState("")
 
   const [jobs2, setJobs2] = useState([])
   const [loading, setLoading] = useState(true)
@@ -61,28 +61,30 @@ export default function CandidatePage() {
   console.log("jobs2", jobs2)
 
   // Filter jobs based on search and filters
-  useEffect(() => {
-    let results = jobs
+useEffect(() => {
+  let results = jobs2;
 
-    if (searchTerm) {
-      results = results.filter(
-        (job) =>
-          job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.description.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
-    }
+  if (searchTerm) {
+    results = results.filter(
+      (job) =>
+        job.title.toLowerCase().includes(searchTerm.toLowerCase()) 
 
-    if (locationFilter) {
-      results = results.filter((job) => job.location === locationFilter)
-    }
+    );
+  }
 
-    if (categoryFilter) {
-      results = results.filter((job) => job.category === categoryFilter)
-    }
+  if (skillFilter && skillFilter !== "all") {
+    results = results.filter(
+      (job) => Array.isArray(job.skills) && job.skills.includes(skillFilter)
+    );
+  }
 
-    setFilteredJobs(results)
-  }, [jobs, searchTerm, locationFilter, categoryFilter])
+  if (toolsFilter && toolsFilter !== "all") {
+    results = results.filter(
+      (job) => Array.isArray(job.tools) && job.tools.includes(toolsFilter)
+    );
+  }
+  setFilteredJobs2(results);
+}, [jobs2, searchTerm, skillFilter, toolsFilter]);
 
   const handleApply = (job) => {
     setSelectedJob(job)
@@ -125,8 +127,9 @@ export default function CandidatePage() {
   }
 
   // Get unique locations and categories for filters
-  const locations = [...new Set(jobs.map((job) => job.location))]
-  const categories = [...new Set(jobs.map((job) => job.category))]
+  const skills = [...new Set(jobs2.flatMap((job) => job.skills))];
+  console.log(skills);
+  const tools = [...new Set(jobs2.flatMap((job) => job.tools))]; // Add this near `skills`
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20 pt-24">
@@ -143,92 +146,51 @@ export default function CandidatePage() {
           <div className="grid gap-4 md:grid-cols-4">
             <div className="relative md:col-span-2">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <Input
+            <Input
                 type="text"
                 placeholder="Search job title, company, or keywords"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+                className="pl-10 w-full h-12"
+                />
             </div>
 
-            <Select value={locationFilter} onValueChange={setLocationFilter}>
+            <Select value={skillFilter} onValueChange={setSkillFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Location" />
+                <SelectValue placeholder="skill" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-                {locations.map((location) => (
-                  <SelectItem key={location} value={location}>
-                    {location}
+                <SelectItem value="all">All skills</SelectItem>
+                {skills.map((skill,index) => (
+                  <SelectItem key={index} value={skill}>
+                    {skill}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <Select value={toolsFilter} onValueChange={setToolsFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Category" />
+                <SelectValue placeholder="Tool" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
+                <SelectItem value="all">All Tools</SelectItem>
+                {tools.map((tool, index) => (
+                  <SelectItem key={index} value={tool}>
+                    {tool}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-gray-500">Popular:</span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 rounded-full text-xs"
-                onClick={() => setLocationFilter("Remote")}
-              >
-                Remote
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 rounded-full text-xs"
-                onClick={() => setCategoryFilter("Development")}
-              >
-                Development
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 rounded-full text-xs"
-                onClick={() => setCategoryFilter("Design")}
-              >
-                Design
-              </Button>
-            </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 text-xs text-teal-600"
-              onClick={() => {
-                setSearchTerm("")
-                setLocationFilter("")
-                setCategoryFilter("")
-              }}
-            >
-              Clear All Filters
-            </Button>
-          </div>
         </div>
 
         {/* Results count */}
         <div className="mb-6 flex items-center justify-between">
           <p className="text-sm text-gray-500">
-            Showing <span className="font-medium text-gray-900">{filteredJobs.length}</span> jobs
+            Showing <span className="font-medium text-gray-900">{filteredJobs2.length}</span> jobs
           </p>
 
           <DropdownMenu>
@@ -247,9 +209,9 @@ export default function CandidatePage() {
         </div>
 
         {/* Job listings */}
-        {filteredJobs.length > 0 ? (
+        { filteredJobs2.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredJobs.map((job, index) => (
+            {filteredJobs2.map((job, index) => (
               <motion.div
                 key={job.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -262,31 +224,46 @@ export default function CandidatePage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="text-xl font-bold text-gray-900">{job.title}</h3>
-                          {job.isNew && <Badge className="bg-teal-100 text-xs font-medium text-teal-800">New</Badge>}
+                          {new Date(job.uploaded_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) && (
+                            <Badge className="bg-teal-100 text-xs font-medium text-teal-800">New</Badge>
+                          )}
                         </div>
-                        <p className="mt-1 text-gray-600">{job.salary}</p>
+                        <p className="mt-1 text-gray-600">
+                          {job.education_levels && job.education_levels.length > 0
+                            ? job.education_levels[0]
+                            : "No education requirement"}
+                        </p>
                       </div>
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100">
                         <Briefcase className="h-5 w-5 text-teal-600" />
                       </div>
                     </div>
 
-                    <div className="mb-4 space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Building className="h-4 w-4 text-gray-400" />
-                        <span>{job.company}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <MapPin className="h-4 w-4 text-gray-400" />
-                        <span>{job.location}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Clock className="h-4 w-4 text-gray-400" />
-                        <span>{job.posted}</span>
+                    <div className="mb-4">
+                      <p className="line-clamp-3 text-sm text-gray-500">{job.description}</p>
+                    </div>
+
+                    <div className="mb-4">
+                      <h4 className="mb-2 text-sm font-semibold text-gray-700">Required Skills:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {job.skills &&
+                          job.skills.slice(0, 5).map((skill, i) => (
+                            <Badge key={i} variant="outline" className="bg-gray-100">
+                              {skill}
+                            </Badge>
+                          ))}
+                        {job.skills && job.skills.length > 5 && (
+                          <Badge variant="outline" className="bg-gray-100">
+                            +{job.skills.length - 5} more
+                          </Badge>
+                        )}
                       </div>
                     </div>
 
-                    <p className="line-clamp-3 text-sm text-gray-500">{job.description}</p>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Clock className="h-4 w-4 text-gray-400" />
+                      <span>Posted on {new Date(job.uploaded_at).toLocaleDateString()}</span>
+                    </div>
                   </CardContent>
                   <CardFooter className="flex gap-3 border-t bg-gray-50 p-4">
                     <Button
@@ -319,8 +296,8 @@ export default function CandidatePage() {
             <Button
               onClick={() => {
                 setSearchTerm("")
-                setLocationFilter("")
-                setCategoryFilter("")
+                setSkillFilter("")
+                setToolsFilter("")
               }}
               className="mt-4 rounded-lg bg-teal-600 text-white hover:bg-teal-700"
             >

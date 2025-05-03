@@ -21,6 +21,8 @@ import Link from "next/link"
 import { useJobStore } from "@/lib/store"
 import { Badge } from "@/components/ui/badge"
 import { fetchJobDetails } from "@/services/fetch-job-details";
+import { postApplyJob } from "@/services/apply-job";
+
 export default function JobDetailsPage() {
   const params = useParams()
   const router = useRouter()
@@ -49,7 +51,7 @@ export default function JobDetailsPage() {
       }
     }
 
-    loadJobDetails()
+    loadJobDetails()  
   }, [jobId])
   console.log(jobDetails)
   
@@ -72,28 +74,40 @@ export default function JobDetailsPage() {
     }
   }
 
-  const handleSubmitApplication = () => {
-    if (name && message && fileName) {
-      setIsSubmitting(true)
+  const handleSubmitApplication = async () => {
+    if (name && jobId && fileName) {
+        setIsSubmitting(true);
 
-      // Simulate API call
-      setTimeout(() => {
-        setIsSubmitting(false)
-        setIsSuccess(true)
+        try {
+            // Call your postApplyJob API
 
-        // Reset and close after showing success
-        setTimeout(() => {
-          setName("")
-          setMessage("")
-          setFileName("")
-          setIsSuccess(false)
-          setIsDialogOpen(false)
-        }, 2000)
-      }, 1000)
+            const response = await postApplyJob(name, fileName, jobId);
+
+            // Handle successful submission
+            if (response) {
+                setIsSubmitting(false);
+                setIsSuccess(true);
+
+                // Reset and close after showing success
+                setTimeout(() => {
+                    setName("");
+                    setMessage("");
+                    setFileName("");
+                    setIsSuccess(false);
+                    setIsDialogOpen(false);
+                }, 2000);
+            }
+        } catch (error) {
+            // Handle any errors
+            console.error("Error submitting application:", error);
+            setIsSubmitting(false);
+            alert("There was an issue submitting your application. Please try again.");
+        }
     } else {
-      alert("Please fill out all fields")
+        alert("Please fill out all fields");
     }
-  }
+};
+
 
   // If job not found
   if (!job) {
@@ -127,8 +141,8 @@ export default function JobDetailsPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">{job.title}</h1>
-                  {job.isNew && <Badge className="bg-teal-500 text-white hover:bg-teal-600">New</Badge>}
+                <h1 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">{jobDetails?.title}</h1>
+                {job.isNew && <Badge className="bg-teal-500 text-white hover:bg-teal-600">New</Badge>}
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-slate-500">
                   <div className="flex items-center gap-1.5">
