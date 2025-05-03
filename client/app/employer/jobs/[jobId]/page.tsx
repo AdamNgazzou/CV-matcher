@@ -48,7 +48,7 @@ export default function JobCandidatesPage() {
   useEffect(() => {
     const loadScores = async () => {
       try {
-        const data = await fetchScores(2) // Test with jobId = 6
+        const data = await fetchScores(jobId) 
         setScores(data)
         console.log("Scores:", data)
       } catch (error) {

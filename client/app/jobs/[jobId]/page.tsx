@@ -27,14 +27,14 @@ export default function JobDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { jobs } = useJobStore()
   const jobId = params.jobId as string
-  const job = jobs.find((j) => j.id === jobId)
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [name, setName] = useState("")
   const [message, setMessage] = useState("")
   const [fileName, setFileName] = useState("")
+  const [file, setFile] = useState<File | null>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
@@ -62,26 +62,22 @@ export default function JobDetailsPage() {
     }
   }, [searchParams])
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (file.type === "application/pdf") {
-        setFileName(file.name)
-      } else {
-        alert("Please upload a PDF file only")
-        e.target.value = ""
-      }
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (selected) {
+      setFile(selected);
+      setFileName(selected.name);
     }
-  }
-
+  };
   const handleSubmitApplication = async () => {
-    if (name && jobId && fileName) {
+    if (name && jobId && file) {
         setIsSubmitting(true);
+        console.log(name,file,jobId);
 
         try {
             // Call your postApplyJob API
 
-            const response = await postApplyJob(name, fileName, jobId);
+            const response = await postApplyJob(name, file, jobId);
 
             // Handle successful submission
             if (response) {
@@ -110,7 +106,7 @@ export default function JobDetailsPage() {
 
 
   // If job not found
-  if (!job) {
+  if (!jobDetails) {
     return (
       <div className="container mx-auto flex min-h-[70vh] flex-col items-center justify-center px-4 py-16 text-center">
         <Briefcase className="h-16 w-16 text-slate-300" />
@@ -142,20 +138,20 @@ export default function JobDetailsPage() {
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">{jobDetails?.title}</h1>
-                {job.isNew && <Badge className="bg-teal-500 text-white hover:bg-teal-600">New</Badge>}
+                {true && <Badge className="bg-teal-500 text-white hover:bg-teal-600">New</Badge>}
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-slate-500">
                   <div className="flex items-center gap-1.5">
                     <Building className="h-4 w-4" />
-                    <span>{job.company}</span>
+                    <span>TechCopr</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <MapPin className="h-4 w-4" />
-                    <span>{job.location}</span>
+                    <span>remote</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Clock className="h-4 w-4" />
-                    <span>Posted {job.posted}</span>
+                    <span>Posted 2 days ago</span>
                   </div>
                 </div>
               </div>
@@ -177,27 +173,34 @@ export default function JobDetailsPage() {
                 <CardContent className="p-6">
                   <div className="prose max-w-none">
                     <h2 className="mb-4 text-xl font-semibold text-slate-900">Job Description</h2>
-                    <p className="mb-4 text-slate-600">{job.description}</p>
+                    <p className="mb-4 text-slate-600">{jobDetails?.description}</p>
 
-                    <h3 className="mb-3 mt-6 text-lg font-semibold text-slate-900">Responsibilities</h3>
+                    <h3 className="mb-3 mt-6 text-lg font-semibold text-slate-900">Education Levels</h3>
                     <ul className="mb-6 list-inside list-disc space-y-2 text-slate-600">
-                      {job.responsibilities.map((item, i) => (
+                      {jobDetails?.education_levels.map((item, i) => (
                         <li key={i}>{item}</li>
                       ))}
                     </ul>
 
-                    <h3 className="mb-3 mt-6 text-lg font-semibold text-slate-900">Requirements</h3>
+                    <h3 className="mb-3 mt-6 text-lg font-semibold text-slate-900">Tools</h3>
                     <ul className="mb-6 list-inside list-disc space-y-2 text-slate-600">
-                      {job.requirements.map((item, i) => (
+                      {jobDetails?.tools.map((item, i) => (
                         <li key={i}>{item}</li>
                       ))}
                     </ul>
 
-                    {job.benefits && (
+                    <h3 className="mb-3 mt-6 text-lg font-semibold text-slate-900">Skills</h3>
+                    <ul className="mb-6 list-inside list-disc space-y-2 text-slate-600">
+                      {jobDetails?.skills.map((item, i) => (
+                        <li key={i}>{item}</li>
+                      ))}
+                    </ul>
+
+                    {jobDetails?.experience && (
                       <>
                         <h3 className="mb-3 mt-6 text-lg font-semibold text-slate-900">Benefits</h3>
                         <ul className="list-inside list-disc space-y-2 text-slate-600">
-                          {job.benefits.map((item, i) => (
+                          {jobDetails.experience.map((item, i) => (
                             <li key={i}>{item}</li>
                           ))}
                         </ul>
@@ -215,27 +218,27 @@ export default function JobDetailsPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                       <span className="text-sm text-slate-500">Employment Type</span>
-                      <span className="font-medium text-slate-700">{job.employmentType}</span>
+                      <span className="font-medium text-slate-700">Full time</span>
                     </div>
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                       <span className="text-sm text-slate-500">Experience Level</span>
-                      <span className="font-medium text-slate-700">{job.experienceLevel}</span>
+                      <span className="font-medium text-slate-700">mid-level</span>
                     </div>
                     <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                       <span className="text-sm text-slate-500">Category</span>
-                      <span className="font-medium text-slate-700">{job.category}</span>
+                      <span className="font-medium text-slate-700">Design</span>
                     </div>
-                    {job.salary && (
+                    {true && (
                       <div className="flex items-center justify-between pb-2">
                         <span className="text-sm text-slate-500">Salary Range</span>
-                        <span className="font-medium text-slate-700">{job.salary}</span>
+                        <span className="font-medium text-slate-700">$80,000 - $110,000</span>
                       </div>
                     )}
                   </div>
                 </CardContent>
               </Card>
 
-              {job.fileName && (
+              {true && (
                 <Card className="border-none shadow-lg">
                   <CardContent className="p-6">
                     <h3 className="mb-4 text-lg font-semibold text-slate-900">Job Description File</h3>
@@ -244,8 +247,8 @@ export default function JobDetailsPage() {
                         <FileText className="h-5 w-5 text-slate-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-slate-700">{job.fileName}</p>
-                        <p className="text-xs text-slate-500">{job.fileSize}</p>
+                        <p className="text-sm font-medium text-slate-700">ui-ux-designer-job-description.pdf</p>
+                        <p className="text-xs text-slate-500">245 KB</p>
                       </div>
                       <Button
                         variant="ghost"
@@ -266,8 +269,8 @@ export default function JobDetailsPage() {
                       <Building className="h-5 w-5 text-teal-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900">{job.company}</h3>
-                      <p className="text-sm text-slate-500">{job.companyDescription}</p>
+                      <h3 className="font-semibold text-slate-900">TechCorp</h3>
+                      <p className="text-sm text-slate-500">Remote</p>
                     </div>
                   </div>
                 </CardContent>
@@ -290,17 +293,23 @@ export default function JobDetailsPage() {
               </div>
               <h3 className="mt-4 text-xl font-medium text-gray-900">Application Submitted!</h3>
               <p className="mt-2 text-gray-500">
-                Your application for {job.title} at {job.company} has been submitted successfully.
+                Your application for {jobDetails?.title} at techCorp has been submitted successfully.
               </p>
             </motion.div>
           ) : (
-            <>
+            <>             
+            <form onSubmit={e => {
+                e.preventDefault();
+                handleSubmitApplication();
+              }} className="space-y-4 max-w-md mx-auto p-4 border rounded">
+
               <DialogHeader>
-                <DialogTitle className="text-xl">Apply for {job.title}</DialogTitle>
+                <DialogTitle className="text-xl">Apply for {jobDetails?.title}</DialogTitle>
                 <DialogDescription>
-                  Complete the form below to submit your application to {job.company}.
+                  Complete the form below to submit your application to techCoprs.
                 </DialogDescription>
               </DialogHeader>
+
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="name" className="text-sm font-medium">
@@ -331,9 +340,10 @@ export default function JobDetailsPage() {
                     Upload CV (PDF only)
                   </Label>
                   <div className="flex items-center gap-2">
-                    <Input id="cv" type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
+                    <Input  id="cv" type="file" accept=".pdf" name="resume" className="hidden" onChange={handleFileChange} />
                     <div className="relative w-full">
                       <Button
+                        type="button"
                         variant="outline"
                         onClick={() => document.getElementById("cv").click()}
                         className="w-full justify-start rounded-lg border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
@@ -354,8 +364,8 @@ export default function JobDetailsPage() {
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleSubmitApplication}
-                  disabled={isSubmitting}
+                  type="submit"
+                  disabled={!name || !file || isSubmitting || isSubmitting}
                   className="rounded-lg bg-teal-600 text-white hover:bg-teal-700"
                 >
                   {isSubmitting ? (
@@ -383,6 +393,8 @@ export default function JobDetailsPage() {
                   )}
                 </Button>
               </DialogFooter>
+            </form>
+
             </>
           )}
         </DialogContent>
