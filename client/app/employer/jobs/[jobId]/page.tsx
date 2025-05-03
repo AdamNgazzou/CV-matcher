@@ -37,7 +37,8 @@ export default function JobCandidatesPage() {
   const jobId = params.jobId as string
 
   const job = postedJobs.find((j) => j.id === jobId)
-  const applicants = getJobApplicants(jobId)
+  const oldapplicants = getJobApplicants(jobId)
+
 
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -45,20 +46,30 @@ export default function JobCandidatesPage() {
   const [scores, setScores] = useState(null)
 
 
+
   useEffect(() => {
     const loadScores = async () => {
       try {
-        const data = await fetchScores(jobId) 
-        setScores(data)
-        console.log("Scores:", data)
+        const data = await fetchScores(jobId);
+        setScores(data);
       } catch (error) {
-        console.error("Error fetching scores:", error)
+        console.error("Error fetching scores:", error);
+      }
+    };
+  
+    loadScores();
+  }, [jobId]);
+  console.log("Scores:", scores)
+  const applicants = oldapplicants.map((applicant, index) => {
+    if (scores && scores[index]) {
+      return {
+        ...applicant,
+        name: scores[index]?.candidate_name || applicant.name,
+        skillsMatch: scores[index]?.score || applicant.skillsMatch,
       }
     }
-
-    loadScores()
-  }, [])
-  console.log("Scores:", scores)
+    return applicant
+  })
   // Filter and sort applicants
   const filteredApplicants = applicants
     .filter((applicant) => {
